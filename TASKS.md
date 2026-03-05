@@ -1,6 +1,6 @@
 Track A — Hygiene
-  PR-01: Pre-commit hooks (clang-format + ruff, permissive)
-  PR-02: Fix violations surfaced by pre-commit
+- PR-01: Pre-commit hooks (clang-format + ruff, permissive)
+- PR-02: Fix violations surfaced by pre-commit
 
 Track B — CI
   PR-03: CI test runner (GPU + InfiniBand, skip gracefully on free tier)
