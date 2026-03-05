@@ -51,3 +51,92 @@ Confirm that and then paste this prompt into a fresh Claude Code session:
 > After creating both files, run `pre-commit run --all-files` and show me the full output. Do not commit anything yet."
 
 Share the output here before we touch git.
+
+### Prompt 1cd ~/moodist
+claude
+```
+
+It will start an interactive session and automatically read `CLAUDE.md`. Then paste this prompt:
+
+---
+```
+We are adding pre-commit hooks to the moodist repository.
+Read CLAUDE.md first for full context.
+
+Create two files:
+
+1. `.pre-commit-config.yaml`:
+   - clang-format hook for C/C++ files in api/, core/, wrapper/
+   - Exclude these files that have known violations:
+     core/collective_base.h, core/cputhread.cc,
+     core/intrusive_list.h, core/moo_allocator_impl.h
+   - ruff hook for py/, tests/, benchmarks/, setup.py
+   - Ignore rules: F541, F841, F401, E402, E721, F811, F821
+   - Exclude fmt/ directory from all hooks
+
+2. `pyproject.toml`:
+   - Ruff config section only
+   - Same ignore rules and paths as above
+   - No build system config (setup.py stays as-is)
+
+After creating both files:
+- Run: pre-commit install
+- Run: pre-commit run --all-files
+- Show me the full output
+- Do NOT commit anything
+
+## PR-02: Fix pre-existing linting violations
+Date: 2026-03-05
+Status: in progress
+
+### Analysis performed before writing prompt
+
+#### F821 — FALSE POSITIVE, no fix needed
+- tests/framework.py:39: `"moodist.TcpStore"` is a string annotation
+- Already suppressed globally in pyproject.toml ignore list
+
+#### E402 — NO ACTION NEEDED
+- Already suppressed globally in pyproject.toml ignore list
+
+#### F841 — 21 cases, all confirmed dead code, safe to auto-fix
+- `shape` variables in test files — leftover from copy-paste
+- `s`, `m` in test_allocator.py — computed but never asserted
+- `final_barrier_count`, `default_pg`, `inner_ranks`, `op` — unused
+
+#### F541 — 27 cases, all redundant f prefix on static strings, safe to auto-fix
+
+#### F401 — 16 cases, all genuinely unused imports, safe to auto-fix
+
+#### E721 — 1 case, type(curr) == type(tgt) → type(curr) is type(tgt)
+- Comment says "Same type - must be identical" confirming exact type intent
+- Safe to fix manually
+
+#### F811 — 1 case, duplicate import torch inside function
+- Module-level import already exists, inner one is redundant
+- Safe to fix manually
+
+### C/C++ decision
+- Deferred to separate PR — touches Vigard's core files
+- Original instructions say "really permissive, don't make Vigard mad"
+- Will discuss with supervisor before proceeding
+
+### Scope of PR-02
+Python fixes only:
+- F541, F401, F841 via auto-fix
+- E721, F811 manually
+- F821, E402 — skip, already suppressed globally
+
+### Verification performed before opening PR-02
+
+1. Syntax check: `python3 -m py_compile py/moodist/*.py tests/*.py benchmarks/*.py setup.py`
+   Result: no output = zero syntax errors ✅
+
+2. Import check: `python3 -c "import py.moodist"`
+   Result: ModuleNotFoundError: torch — pre-existing, unrelated to our changes,
+   torch not installed on c7i.flex.large (no GPU/CUDA) ✅
+
+3. Ruff check: `ruff check py/ tests/ benchmarks/ setup.py`
+   Result: 2 known false positives (F821, E402), suppressed in PR-01's pyproject.toml ✅
+
+Full test suite cannot be run locally — requires GPU cluster + InfiniBand.
+Will be validated by CI once PR-03 (GitHub Actions) is in place.

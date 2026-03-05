@@ -27,13 +27,13 @@ python3 --version
 ## EC2 Instance
 - Region: ap-southeast-1
 - Instance type: c7i.flex.large
-- Instance ID: i-039c315e773bdb280
-- Public IP: 18.136.194.180
+- Instance ID: i-0fc6653e0b7d3def1
+- Public IP: 13.213.56.96
 - AMI: Ubuntu 22.04 LTS
 
 ## SSH Config (Mac)
 Host moodist-dev
-    HostName 18.136.194.180
+    HostName 13.213.56.96
     User ubuntu
     IdentityFile ~/.ssh/moodist-dev-singapore.pem
     ServerAliveInterval 60
@@ -65,3 +65,46 @@ cat ~/.ssh/id_ed25519.pub
 
 ssh -T git@github.com
 # Should say: Hi YOUR_USERNAME! You've successfully authenticated...
+## Claude Code CLI Installation on EC2
+
+### Problem
+Default Node.js on Ubuntu 22.04 is v12.x — too old for Claude Code (requires >=18.0.0).
+`npm install -g @anthropic-ai/claude-code` fails without upgrading Node first.
+
+### Solution: Install via nvm
+```bash
+# Install nvm (Node Version Manager)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# Load nvm in current session
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# Install Node.js 20 (LTS)
+nvm install 20
+nvm use 20
+
+# Verify Node version
+node --version  # Should show v20.x.x
+
+# Install Claude Code
+npm install -g @anthropic-ai/claude-code
+
+# Verify
+claude --version  # Should show 2.1.69 or later
+```
+
+### Make nvm persistent across sessions
+nvm is automatically added to ~/.bashrc during installation.
+For new terminal sessions it loads automatically.
+For the current session only, run:
+```bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+```
+
+### Installed versions
+- nvm: 0.39.7
+- Node.js: v20.20.0
+- Claude Code: 2.1.69
+- Command: `claude` (not `claude-code`)
