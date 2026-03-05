@@ -1,5 +1,5 @@
 Track A — Hygiene
-  - [x] PR-01: Pre-commit hooks (clang-format + ruff, permissive)
+  - [x] PR-01: Pre-commit hooks (clang-format + ruff, permissive) - https://github.com/ntl2105/moodist/pull/1
   - [x] PR-02: Fix Python linting violations — https://github.com/ntl2105/moodist/pull/2
 
 Track B — CI
