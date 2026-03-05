@@ -1,0 +1,32 @@
+# ---- Moodist EC2 ----
+EC2_INSTANCE_ID="i-XXXXXXXXXX"  # paste your instance ID here
+
+ec2-start() {
+  echo "Starting instance..."
+  aws ec2 start-instances --instance-ids $EC2_INSTANCE_ID --region ap-southeast-1 > /dev/null
+  echo "Waiting for instance to be running..."
+  aws ec2 wait instance-running --instance-ids $EC2_INSTANCE_ID --region ap-southeast-1
+  NEW_IP=$(aws ec2 describe-instances \
+    --instance-ids $EC2_INSTANCE_ID \
+    --region ap-southeast-1 \
+    --query "Reservations[0].Instances[0].PublicIpAddress" \
+    --output text)
+  # update SSH config automatically
+  sed -i '' "s/HostName .*/HostName $NEW_IP/" ~/.ssh/config
+  echo "Instance ready. IP updated to: $NEW_IP"
+  echo "Connect with: ssh moodist-dev"
+}
+
+ec2-stop() {
+  echo "Stopping instance..."
+  aws ec2 stop-instances --instance-ids $EC2_INSTANCE_ID --region ap-southeast-1 > /dev/null
+  echo "Instance stopped. No charges accumulating."
+}
+
+ec2-status() {
+  aws ec2 describe-instances \
+    --instance-ids $EC2_INSTANCE_ID \
+    --region ap-southeast-1 \
+    --query "Reservations[0].Instances[0].State.Name" \
+    --output text
+}
